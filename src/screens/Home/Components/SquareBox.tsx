@@ -2,8 +2,9 @@ import React, {useEffect, useMemo, useRef} from "react";
 import {Animated, Easing, StyleSheet, Text} from "react-native";
 import {BOX_MARGIN, BOX_WIDTH, getBoxColor} from "../helper.ts";
 import Colors from "../../../styles/Colors.ts";
+import {SHADOW_STYLE} from "../../../styles/styles.ts";
 
-const SquareBox = ({value}: {value: number}) => {
+const SquareBox = ({value}: { value: number }) => {
     const colorAnimation = useRef(new Animated.Value(0)).current;
 
     const color = useMemo(() => {
@@ -55,15 +56,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: Colors.empty,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-
-        elevation: 5,
+        ...SHADOW_STYLE,
     },
     SquareBoxText: {
         fontSize: 16,
