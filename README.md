@@ -1,6 +1,6 @@
-## Game 2048
+# Game 2048
 
-![game screen shot.png](src%2Fassets%2Fgame%20screen%20shot.png)
+<img src="./src/assets/game screen shot.png" width="255" height="566" alt="Game Screenshot">
 
 ## Project Setup
 
