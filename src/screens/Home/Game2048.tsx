@@ -1,35 +1,25 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {
-  Text,
-  View,
-  StyleSheet,
-  Dimensions,
-  FlatList,
   Alert,
-  Animated,
-  Easing,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import Colors from '../../styles/Colors.ts';
-import { delay, doLog, getBoxColor, pickRandomNumber } from "./helper.ts";
+import {BOX_MARGIN, BOX_WIDTH, doLog, getBoxColor, pickRandomNumber, SQUARE_WIDTH} from "./helper.ts";
 import useSwipe from '../../hooks/useSwipe.ts';
+import SquareBox from "./Components/SquareBox.tsx";
 
-const BOX_NUMBERS = [2,4,8,16,32,64,128,256,512,1024,2048];
-
-interface IGame2048 {
-  score: number;
-  onScoreChange: (score: number) => void;
-}
-
-const {width, height} = Dimensions.get('window');
-
-const SQUARE_WIDTH = width * 0.9;
-const BOX_MARGIN = 5;
-const BOX_WIDTH = (SQUARE_WIDTH - BOX_MARGIN * 9) / 4;
-
-function Game2048({}: IGame2048) {
+function Game2048() {
   const [squares, setSquares] = useState(Array(16).fill(0));
   const [maxNumber, setMaxNumber] = useState(2);
-
+  const [score, setScore] = useState(0);
+  function onScoreChange(value: number) {
+    setScore(score + value);
+  }
   function generateNumber() {
     console.log('setSquares - generateNumber');
     let random = Math.floor(Math.random() * squares.length);
@@ -64,7 +54,7 @@ function Game2048({}: IGame2048) {
     }
   }
 
-  async function moveDown() {
+  function moveDown() {
     console.log('setSquares - moveDown');
     //get column
     setSquares(prevState => {
@@ -90,7 +80,7 @@ function Game2048({}: IGame2048) {
     });
   }
 
-  async function moveUp() {
+  function moveUp() {
     console.log('setSquares - moveUp');
     //get column
     setSquares(prevState => {
@@ -116,7 +106,7 @@ function Game2048({}: IGame2048) {
   }
 
   //swipe left
-  async function moveLeft() {
+  function moveLeft() {
     console.log('setSquares - moveLeft');
     setSquares(prevState => {
       for (let i = 0; i < 16; i++) {
@@ -145,7 +135,7 @@ function Game2048({}: IGame2048) {
   }
 
   //swipe right
-  async function moveRight() {
+  function moveRight() {
     console.log('setSquares - moveRight');
     setSquares(prevState => {
       for (let i = 0; i < 16; i++) {
@@ -176,7 +166,7 @@ function Game2048({}: IGame2048) {
     });
   }
 
-  async function sumRow() {
+  function sumRow() {
     console.log('setSquares - sumRow');
     let _max = 0;
     setSquares(prevState => {
@@ -187,6 +177,7 @@ function Game2048({}: IGame2048) {
           if (maxNumber < combineNum) {
             _max = combineNum;
           }
+          onScoreChange(combineNum);
           prevState[i] = combineNum;
           prevState[i + 1] = 0;
         }
@@ -198,7 +189,7 @@ function Game2048({}: IGame2048) {
     }
   }
 
-  async function sumColumn() {
+  function sumColumn() {
     console.log('setSquares - sumColumn');
     let _max = 0;
     setSquares(prevState => {
@@ -212,7 +203,7 @@ function Game2048({}: IGame2048) {
           prevState[i] = combineNum;
           prevState[i + 4] = 0;
 
-          // onScoreChange(score + combineNum);
+          onScoreChange(combineNum);
         }
       }
       return [...prevState];
@@ -236,43 +227,32 @@ function Game2048({}: IGame2048) {
 
   const {onTouchStart, onTouchEnd} = useSwipe({
     rangeOffset: 6,
-    onSwipeDown: async () => {
+    onSwipeDown: () => {
       console.log('onSwipeDown');
-      await moveDown();
-      // await delay();
-      await sumColumn();
-      // await delay();
-      await moveDown();
-      // await delay();
+      moveDown();
+      sumColumn();
+      moveDown();
       generateNumber();
     },
-    onSwipeLeft: async () => {
+    onSwipeLeft: () => {
       console.log('onSwipeLeft');
-      // await delay();
-      await moveLeft();
-      // await delay();
-      await sumRow();
-      // await delay();
-      await moveLeft();
+      moveLeft();
+      sumRow();
+      moveLeft();
       generateNumber();
     },
-    onSwipeRight: async () => {
+    onSwipeRight: () => {
       console.log('onSwipeRight');
-      await moveRight();
-      // await delay();
-      await sumRow();
-      // await delay();
-      await moveRight();
+      moveRight();
+      sumRow();
+      moveRight();
       generateNumber();
     },
-    onSwipeUp: async () => {
+    onSwipeUp: () => {
       console.log('onSwipeUp');
-      // await delay();
-      await moveUp();
-      // await delay();
-      await sumColumn();
-      // await delay();
-      await moveUp();
+      moveUp();
+      sumColumn();
+      moveUp();
       generateNumber();
     },
   });
@@ -281,63 +261,32 @@ function Game2048({}: IGame2048) {
     doLog(squares);
   }, [squares]);
   return (
-    <View style={styles.HomeContainer}>
-      <FlatList
-        data={squares}
-        renderItem={({item}) => {
-          if (item > 0) {
-            return <SquareBox value={item} />;
-          }
-          return <View style={styles.SquareBoxWrapper} />;
-        }}
-        numColumns={4}
-        scrollEnabled={false}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-      />
-    </View>
+      <>
+        <View style={styles.GameHeaderWrapper}>
+          <Text style={styles.GameScoreText}>Score: {score}</Text>
+          <TouchableOpacity style={styles.GameResetIconWrapper} onPress={reset}>
+          <Image source={require('../../assets/refresh_icon.png')} style={styles.GameResetIcon} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.HomeContainer}>
+          <FlatList
+              data={squares}
+              renderItem={({item}) => {
+                if (item > 0) {
+                  return <SquareBox value={item} />;
+                }
+                return <View style={styles.SquareBoxWrapper} />;
+              }}
+              numColumns={4}
+              scrollEnabled={false}
+              onTouchStart={onTouchStart}
+              onTouchEnd={onTouchEnd}
+          />
+        </View>
+      </>
+
   );
 }
-const SquareBox = ({value}: {value: number}) => {
-  const colorAnimation = useRef(new Animated.Value(0)).current;
-
-  const color = useMemo(() => {
-    if (value > 0) {
-      return getBoxColor(value);
-    }
-    return Colors.empty;
-  }, [value]);
-
-  useEffect(() => {
-    Animated.timing(colorAnimation, {
-      toValue: 1,
-      duration: 500, // Adjust duration as needed
-      easing: Easing.in(Easing.ease), // Apply ease-in easing function
-      useNativeDriver: false, // Make sure to set this to false for backgroundColor animation
-    }).start();
-  }, [colorAnimation, value]);
-
-  const interpolatedColor = colorAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [Colors.empty, color],
-    extrapolate: 'clamp',
-  });
-
-  const boxNumber = useMemo(() => {
-    if (value > 0) {
-      return value;
-    }
-    return '';
-  }, [value]);
-
-  return (
-    <Animated.View
-      style={[styles.SquareBoxWrapper, {backgroundColor: interpolatedColor}]}>
-      <Text style={styles.SquareBoxText}>{boxNumber}</Text>
-    </Animated.View>
-  );
-};
-
 export default Game2048;
 
 const styles = StyleSheet.create({
@@ -348,10 +297,49 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.border,
     borderRadius: 10,
     padding: BOX_MARGIN,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+
+    elevation: 5,
   },
-  HomeContainerRow: {
+  GameHeaderWrapper: {
     flexDirection: 'row',
-    flex: 1,
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 5,
+  },
+  GameResetIconWrapper: {
+    width: 30,
+    height: 30,
+    borderRadius: 100,
+    // borderWidth: 1,
+    // borderColor: 'black',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    right: 50,
+    backgroundColor: 'white',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+
+    elevation: 5,
+  },
+  GameResetIcon: {
+    width: 15,
+    height: 15,
+    resizeMode: 'contain',
+    tintColor: 'black',
   },
   SquareBoxWrapper: {
     flex: 1,
@@ -363,8 +351,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.empty,
   },
-  SquareBoxText: {
-    fontSize: 16,
-    fontWeight: '600',
+  GameScoreText: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      alignSelf: 'center',
+      marginVertical: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+
+    elevation: 5,
   },
+
 });

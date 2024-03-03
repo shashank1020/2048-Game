@@ -1,4 +1,11 @@
 import Colors from '../../styles/Colors.ts';
+import {Dimensions} from "react-native";
+
+const {width, height} = Dimensions.get('window');
+
+export const SQUARE_WIDTH = width * 0.9;
+export const BOX_MARGIN = 5;
+export const BOX_WIDTH = (SQUARE_WIDTH - BOX_MARGIN * 9) / 4;
 
 export const getBoxColor = (value: number): string => {
   const _Color = Colors as {[color: string]: string};
